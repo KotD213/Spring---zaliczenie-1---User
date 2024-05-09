@@ -1,0 +1,86 @@
+public class User {
+
+    private UUID id;
+    private String firstName;
+    private String lastName;
+    private List<String> hobbies;
+}
+public interface Spring {
+
+    User addUser(User user);
+
+    User getUserById(UUID id);
+
+    void deleteUserById(UUID id);
+}
+@Service
+public class UserServiceImpl implements Spring {
+
+    private final UserRepository userRepository;
+
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public User addUser(User user) {
+        return userRepository.save(user);
+    }
+
+    @Override
+    public User getUserById(UUID id) {
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    @Override
+    public void deleteUserById(UUID id) {
+        userRepository.deleteById(id);
+    }
+}
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    private final Spring userService;
+
+    public UserController(Spring userService) {
+        this.userService = userService;
+    }
+
+    @PostMapping
+    public ResponseEntity<User> addUser(@RequestBody User user) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.addUser(user));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
+        return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUserById(@PathVariable UUID id) {
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+@RunWith(SpringRunner.class)
+public class UserServiceTests {
+
+    @MockBean
+    private UserRepository userRepository;
+
+    @Autowired
+    private Spring userService;
+
+    @Test
+    public void testAddUser() {
+    }
+
+    @Test
+    public void testGetUserById() {
+    }
+
+    @Test
+    public void testDeleteUserById() {
+    }
+}
